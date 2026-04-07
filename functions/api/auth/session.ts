@@ -1,7 +1,7 @@
 export async function onRequest(context: any): Promise<Response> {
   const { request } = context;
   const cookies = request.headers.get('cookie') || '';
-  const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('session='));
+  const sessionCookie = cookies.split(';').find((c: string) => c.trim().startsWith('session='));
   if (!sessionCookie) return new Response(JSON.stringify(null), { headers: { 'Content-Type': 'application/json' } });
   try {
     const data = sessionCookie.split('=')[1];
