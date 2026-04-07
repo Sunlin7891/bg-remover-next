@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import LoginButton from '@/components/LoginButton';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -79,9 +80,12 @@ export default function Home() {
           <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Remove Background
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-6">
             100% Automatically and Free
           </p>
+          <div className="flex justify-center">
+            <LoginButton />
+          </div>
         </div>
 
         {/* Main Card */}
