@@ -36,4 +36,15 @@ export const authConfig = {
     signIn: '/',
   },
   trustHost: true,
+  logger: {
+    error(code, ...message) {
+      console.error('NextAuth Error:', code, message);
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code);
+    },
+    debug(code, ...message) {
+      console.log('NextAuth Debug:', code, message);
+    }
+  }
 } satisfies NextAuthConfig;
