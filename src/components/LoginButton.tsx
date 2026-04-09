@@ -1,75 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
-}
+import { signIn } from 'next-auth/react';
 
 export default function LoginButton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        setUser(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  const handleLogin = () => {
-    window.location.href = '/api/auth/login';
+  const handleSignIn = async () => {
+    await signIn('google', { 
+      callbackUrl: '/',
+      redirect: true,
+    });
   };
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
-    window.location.reload();
-  };
-
-  if (loading) {
-    return (
-      <button disabled className="px-4 py-2 bg-gray-300 rounded-lg cursor-not-allowed">
-        加载中...
-      </button>
-    );
-  }
-
-  if (user) {
-    return (
-      <div className="flex items-center gap-3">
-        {user.picture && (
-          <img
-            src={user.picture}
-            alt={user.name || "User"}
-            className="w-8 h-8 rounded-full"
-          />
-        )}
-        <span className="text-sm text-gray-700">
-          {user.name || user.email}
-        </span>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-        >
-          退出登录
-        </button>
-      </div>
-    );
-  }
 
   return (
     <button
-      onClick={handleLogin}
-      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm"
+      onClick={handleSignIn}
+      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm cursor-pointer"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

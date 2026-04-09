@@ -2,4 +2,17 @@ name = "bg-remover-next"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
-functions_dir = "functions"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "bg-remover-db"
+database_id = "738f93f7-560e-4920-962f-a0b48cc29200"
+
+# KV Namespace for sessions
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "101cc097fa5c45b1a49fc35ffe58a2f7"
+
+[vars]
+GOOGLE_CLIENT_ID = "722385446853-vl1hpukubi5v9pf95u0740p4k4p6agur.apps.googleusercontent.com"

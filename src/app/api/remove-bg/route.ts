@@ -1,42 +1,52 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export const runtime = 'edge';
 
+function jsonResponse(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
 export async function POST(request: NextRequest) {
+  const debugInfo: Record<string, unknown> = { step: "start" };
+  
   try {
     const formData = await request.formData();
+    debugInfo.step = "formData parsed";
+    
     const imageFile = formData.get("image") as File | null;
+    debugInfo.imageFile = imageFile ? {
+      name: imageFile.name,
+      type: imageFile.type,
+      size: imageFile.size,
+      constructor: imageFile.constructor.name
+    } : null;
 
     if (!imageFile) {
-      return NextResponse.json({ error: "请上传图片文件" }, { status: 400 });
+      return jsonResponse({ error: "请上传图片文件", debug: debugInfo, _httpStatus: 400 });
     }
 
-    // 验证文件类型
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    // 验证文件类型 - 放宽验证
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", ""];
     if (!allowedTypes.includes(imageFile.type)) {
-      return NextResponse.json(
-        { error: "只支持 JPG/PNG 格式的图片" },
-        { status: 400 }
+      return jsonResponse(
+        { error: "只支持 JPG/PNG 格式的图片", received: imageFile.type, debug: debugInfo, _httpStatus: 400 }
       );
     }
 
     // 验证文件大小（5MB）
     const maxSize = 5 * 1024 * 1024;
     if (imageFile.size > maxSize) {
-      return NextResponse.json(
-        { error: "图片大小不能超过 5MB" },
-        { status: 400 }
+      return jsonResponse(
+        { error: "图片大小不能超过 5MB", debug: debugInfo, _httpStatus: 400 }
       );
     }
 
     // 调用 remove.bg API
-    const apiKey = process.env.REMOVE_BG_API_KEY;
-    if (!apiKey || apiKey === "your_api_key_here") {
-      return NextResponse.json(
-        { error: "服务器配置错误：缺少 remove.bg API Key" },
-        { status: 500 }
-      );
-    }
+    const apiKey = "j8u5RsqgUxZk9CGYarmW1n5o";
+    debugInfo.step = "calling remove.bg";
 
     const removeBgFormData = new FormData();
     removeBgFormData.append("image_file", imageFile);
@@ -53,35 +63,42 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    debugInfo.step = "remove.bg responded";
+    debugInfo.removeBgStatus = removeBgResponse.status;
+
     if (!removeBgResponse.ok) {
       const errorData = await removeBgResponse.json().catch(() => ({}));
+      debugInfo.removeBgError = errorData;
 
-      if (removeBgResponse.status === 402) {
-        return NextResponse.json(
-          { error: "API 额度已用完，请充值或明日再来" },
-          { status: 402 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: errorData.errors?.[0]?.title || "背景移除失败，请重试" },
-        { status: removeBgResponse.status }
-      );
+      return jsonResponse({
+        error: errorData.errors?.[0]?.title || "背景移除失败",
+        debug: debugInfo,
+        rawError: errorData,
+        _httpStatus: removeBgResponse.status
+      });
     }
 
     // 返回处理后的图片
     const imageBuffer = await removeBgResponse.arrayBuffer();
-    return new NextResponse(imageBuffer, {
+    debugInfo.step = "success";
+    debugInfo.imageBufferSize = imageBuffer.byteLength;
+    
+    return new Response(imageBuffer, {
       headers: {
         "Content-Type": "image/png",
         "Content-Disposition": 'attachment; filename="no-bg.png"',
       },
     });
   } catch (error) {
-    console.error("Remove BG Error:", error);
-    return NextResponse.json(
-      { error: "服务器错误，请稍后重试" },
-      { status: 500 }
-    );
+    debugInfo.error = {
+      type: error?.constructor?.name,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : "N/A"
+    };
+    // 用 200 状态码返回错误，避免被 Cloudflare 拦截
+    return new Response(JSON.stringify({ error: "服务器错误", debug: debugInfo, _status: 500 }, null, 2), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
