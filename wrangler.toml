@@ -15,4 +15,4 @@ binding = "SESSION_KV"
 id = "101cc097fa5c45b1a49fc35ffe58a2f7"
 
 [vars]
-GOOGLE_CLIENT_ID = "722385446853-vl1hpukubi5v9pf95u0740p4k4p6agur.apps.googleusercontent.com"
+NEXTAUTH_URL = "https://image-backgroundremover.shop"
